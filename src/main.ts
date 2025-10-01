@@ -51,8 +51,6 @@ import {
 } from './types.js'
 import { returnPresetDefinitions } from './presets.js'
 
-const { applyPatch } = FJP
-
 /**
  *
  * Main class of the module to interact with the device.
@@ -976,7 +974,7 @@ export class DirectoutInstance extends InstanceBase<ModuleConfig> {
 			// if (!data.match(/"payload":\{"fan":\{/)) this.log('debug', 'Received update: ' + data)
 			const patches = this.payloadToPatches(response.payload)
 			// this.log('debug', 'Patches generated:' + JSON.stringify(patches, null, 2))
-			applyPatch(this.state, patches)
+			FJP.applyPatch(this.state, patches)
 			patches.forEach((patch) => {
 				// if (!patch.path.match(/\/fan\//)) this.log('debug', 'Patch generated:' + JSON.stringify(patch, null, 2))
 				this.checkSub(patch.path)
