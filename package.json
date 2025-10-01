@@ -1,0 +1,51 @@
+{
+	"name": "directout-audioprocessors",
+	"version": "1.0.0",
+	"main": "dist/main.js",
+	"type": "module",
+	"scripts": {
+		"postinstall": "husky",
+		"format": "prettier -w .",
+		"package": "run build && companion-module-build",
+		"build": "rimraf dist && run build:main",
+		"build:main": "tsc -p tsconfig.build.json",
+		"dev": "tsc -p tsconfig.build.json --watch",
+		"lint:raw": "eslint",
+		"lint": "run lint:raw ."
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bitfocus/companion-module-directout-audioprocessors.git"
+	},
+	"engines": {
+		"node": "^22.14",
+		"yarn": "^4"
+	},
+	"dependencies": {
+		"@companion-module/base": "~1.11.3",
+		"fast-json-patch": "^3.1.1"
+	},
+	"devDependencies": {
+		"@companion-module/tools": "^2.4.1",
+		"@types/jest": "^30.0.0",
+		"@types/node": "^22.14.1",
+		"eslint": "^9.36.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.5.2",
+		"prettier": "^3.6.2",
+		"rimraf": "^6.0.1",
+		"typescript": "~5.8.3",
+		"typescript-eslint": "^8.45.0"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"lint-staged": {
+		"*.{css,json,md,scss}": [
+			"prettier --write"
+		],
+		"*.{ts,tsx,js,jsx}": [
+			"yarn lint:raw --fix"
+		]
+	},
+	"packageManager": "yarn@4.9.1"
+}
