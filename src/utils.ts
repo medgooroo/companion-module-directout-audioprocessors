@@ -4,7 +4,8 @@ import {
 	SomeCompanionFeedbackInputField,
 	splitRgb,
 } from '@companion-module/base'
-import { DOvalues } from './types.js'
+import { DeviceType, DOvalues } from './types.js'
+import { deviceTables } from './capabilities.js'
 
 export const clampDOvalues = (value: unknown): DOvalues => {
 	if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
@@ -51,6 +52,69 @@ export const insertPathOptions = (path: string, values?: Array<string | number>)
 	resultarr.push(pathParts[pathParts.length - 1])
 
 	return resultarr.join('')
+}
+
+type MatMixer = { id: string; label: string; in: number; out: number; devId: number; path: string }
+
+/**
+ * Returns the 64x64 matrix mixer of a device (MX, MAVEN), undefined if it has none
+ * @param devicetype
+ */
+export const getMtx64 = (devicetype: DeviceType): MatMixer | undefined =>
+	(deviceTables.matMixer[devicetype] as MatMixer[] | undefined)?.find((mtx) => mtx.path === 'mixer64x64')
+
+/**
+ * Returns the path of a mixer64x64 crosspoint, undefined if out of range.
+ * Index is master-major (master * sources + source), as globcon's matrix_source table.
+ * @param kind - 'param' is the send level in dB, 'mute' is 0/1
+ */
+export const mtx64XptPath = (
+	mtx: MatMixer,
+	kind: 'mute' | 'param',
+	master: unknown,
+	source: unknown,
+): string | undefined => {
+	const m = Number(master)
+	const s = Number(source)
+	if (!Number.isInteger(m) || !Number.isInteger(s) || m < 0 || s < 0 || m >= mtx.out || s >= mtx.in) return undefined
+	return `/settings/mixer64x64/${kind}/${m * mtx.in + s}`
+}
+
+/**
+ * Inverse of mtx64XptPath for a crosspoint index
+ */
+export const mtx64XptFromIndex = (mtx: MatMixer, index: number): { master: number; source: number } => ({
+	master: Math.floor(index / mtx.in),
+	source: index % mtx.in,
+})
+
+/**
+ * Returns the matrix and source dropdowns of the mixer64x64, labelled from the device
+ * @param getState
+ */
+export const mtx64XptOptions = (mtx: MatMixer, getState: (path: string) => any): CompanionInputFieldDropdown[] => {
+	const choices = (count: number, labelPath: (i: number) => string, defaultLabel: string) =>
+		Array.from({ length: count }, (_, i) => {
+			const label = getState(labelPath(i))
+			const defaultlabel = `${defaultLabel} ${i + 1}`
+			return { id: i, label: typeof label === 'string' && label !== '' ? `${label} (${defaultlabel})` : defaultlabel }
+		})
+	return [
+		{
+			id: 'master',
+			type: 'dropdown',
+			label: 'Matrix',
+			choices: choices(mtx.out, (i) => `/settings/mixer64x64/master/${i}/label`, 'Matrix'),
+			default: 0,
+		},
+		{
+			id: 'source',
+			type: 'dropdown',
+			label: 'Source Channel',
+			choices: choices(mtx.in, (i) => `/settings/mixer64x64/source_label/${i}`, 'Source'),
+			default: 0,
+		},
+	]
 }
 
 export const PrevNextChoices = [

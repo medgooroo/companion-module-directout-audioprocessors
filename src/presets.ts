@@ -1495,6 +1495,124 @@ export function returnPresetDefinitions(self: DirectoutInstance): CompanionPrese
 		},
 		{
 			type: 'button',
+			category: 'Matrix',
+			style: {
+				text: '`${$(DO:matrix_mixer_source_label)["0"]}\\nto ${$(DO:matrix_mixer_master_label)["0"]}\\n${toFixed($(DO:matrix_source_send_level)["0"]["0"],1)} dB`',
+				textExpression: true,
+				size: 'auto',
+				color: contrastcolor(defaultcolor_bg),
+				bgcolor: defaultcolor_bg as any,
+			},
+			feedbacks: [
+				{
+					feedbackId: 'mtx64_xpt_mute',
+					options: {
+						master: 0,
+						source: 0,
+						mute: 1,
+					},
+					style: {
+						color: contrastcolor(defaultcolor_bad),
+						bgcolor: defaultcolor_bad as any,
+					},
+					isInverted: false,
+					headline: 'Change background when matrix source is muted',
+				},
+			],
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'mtx64_xpt_mute',
+							options: {
+								master: 0,
+								source: 0,
+								mute: '%%toggle%%',
+							},
+							headline: 'Toggle matrix source mute',
+						},
+					],
+					up: [],
+				},
+			],
+			name: 'Matrix Source Mute, Label and Level',
+		},
+		{
+			type: 'button',
+			category: 'Matrix',
+			options: {
+				rotaryActions: true,
+			},
+			style: {
+				text: '`${$(DO:matrix_mixer_source_label)["0"]}\\nto ${$(DO:matrix_mixer_master_label)["0"]}\\n${toFixed($(DO:matrix_source_send_level)["0"]["0"],1)} dB`',
+				textExpression: true,
+				size: 'auto',
+				color: contrastcolor(defaultcolor_bg),
+				bgcolor: defaultcolor_bg as any,
+				png64: circulararrow,
+			},
+			feedbacks: [
+				{
+					feedbackId: 'mtx64_xpt_mute',
+					options: {
+						master: 0,
+						source: 0,
+						mute: 1,
+					},
+					style: {
+						color: contrastcolor(defaultcolor_bad),
+						bgcolor: defaultcolor_bad as any,
+					},
+					isInverted: false,
+					headline: 'Change background when matrix source is muted',
+				},
+			],
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'mtx64_xpt_mute',
+							options: {
+								master: 0,
+								source: 0,
+								mute: '%%toggle%%',
+							},
+							headline: 'Toggle matrix source mute',
+						},
+					],
+					up: [],
+					rotate_left: [
+						{
+							actionId: 'mtx64_xpt_level',
+							options: {
+								master: 0,
+								source: 0,
+								level: 0,
+								level_incrementalValue: -0.2,
+								level_incrementalToggle: true,
+							},
+							headline: 'Decrease level at left turn',
+						},
+					],
+					rotate_right: [
+						{
+							actionId: 'mtx64_xpt_level',
+							options: {
+								master: 0,
+								source: 0,
+								level: 0,
+								level_incrementalValue: 0.2,
+								level_incrementalToggle: true,
+							},
+							headline: 'Increase level at right turn',
+						},
+					],
+				},
+			],
+			name: 'Matrix Source Level on rotation, Mute on press, Label and Level on Display',
+		},
+		{
+			type: 'button',
 			category: 'Sum Bus',
 			style: {
 				text: '`${$(DO:sum_bus_label)["srcdsp_sumbus1_1"]}\\nMute\\n${toFixed($(DO:sum_bus_gain)["srcdsp_sumbus1_1"],1)} dB`',

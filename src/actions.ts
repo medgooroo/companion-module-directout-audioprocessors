@@ -1,6 +1,6 @@
 import { CompanionActionContext, CompanionActionDefinitions, CompanionActionEvent } from '@companion-module/base'
 import { DirectoutInstance } from './main.js'
-import { PrevNextChoices } from './utils.js'
+import { PrevNextChoices, getMtx64, mtx64XptOptions, mtx64XptPath } from './utils.js'
 import { deviceTables, PICKOFFNUM } from './capabilities.js'
 
 export function returnActionDefinitions(self: DirectoutInstance): CompanionActionDefinitions {
@@ -633,6 +633,98 @@ export function returnActionDefinitions(self: DirectoutInstance): CompanionActio
 
 			return { ...event.options, action }
 		},
+	}
+
+	const mtx64 = getMtx64(self.devicetype)
+	if (mtx64) {
+		const xptOptions = mtx64XptOptions(mtx64, (path) => self.getState(path))
+
+		actions['mtx64_xpt_mute'] = {
+			name: 'Matrix: Source Mute',
+			options: [
+				...xptOptions,
+				{
+					id: 'mute',
+					type: 'dropdown',
+					label: 'Mute',
+					choices: [
+						{ label: 'Toggle', id: '%%toggle%%' },
+						{ label: 'Mute', id: 1 },
+						{ label: 'Unmute', id: 0 },
+					],
+					default: '%%toggle%%',
+				},
+			],
+			callback: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'mute', event.options.master, event.options.source)
+				if (!path) return
+				let value = event.options.mute
+				if (value === '%%toggle%%') value = Number(self.getState(path)) ? 0 : 1
+				self.sendSetCmd(path, Number(value))
+			},
+			learn: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'mute', event.options.master, event.options.source)
+				if (!path) return {}
+				return { ...event.options, mute: Number(self.getState(path)) ? 1 : 0 }
+			},
+		}
+
+		actions['mtx64_xpt_level'] = {
+			name: 'Matrix: Source Send Level',
+			options: [
+				...xptOptions,
+				{
+					id: 'level_incrementalToggle',
+					type: 'checkbox',
+					label: 'Incremental entry of Level',
+					default: false,
+					tooltip: 'Check if you want to enter the value for Level incremental or leave unchecked for absolute value',
+				},
+				{
+					id: 'level',
+					type: 'number',
+					label: 'Level (abs)',
+					min: -144,
+					max: 18,
+					step: 0.1,
+					default: 0,
+					tooltip: 'Set Level to an absolute value between -144 and 18, increments 0.1',
+					isVisibleExpression: `$(options:level_incrementalToggle) != true`,
+				},
+				{
+					id: 'level_incrementalValue',
+					type: 'number',
+					label: 'Level (inc)',
+					min: -162,
+					max: 162,
+					step: 0.1,
+					default: 0,
+					tooltip:
+						"Increment/decrement current value of Level. Value won't exceed a range from -144 to 18 and will conform to 0.1 steps",
+					isVisibleExpression: `$(options:level_incrementalToggle) == true`,
+				},
+			],
+			callback: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'param', event.options.master, event.options.source)
+				if (!path) return
+				let value = Number(event.options.level)
+				if (event.options.level_incrementalToggle == true) {
+					const current = Number(self.getState(path))
+					if (isNaN(current)) return
+					value = current + Number(event.options.level_incrementalValue)
+				}
+				if (isNaN(value)) return
+				value = Math.min(18, Math.max(-144, Math.round(value * 10) / 10))
+				self.sendSetCmd(path, value)
+			},
+			learn: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'param', event.options.master, event.options.source)
+				if (!path) return {}
+				const level = Number(self.getState(path))
+				if (isNaN(level)) return {}
+				return { ...event.options, level, level_incrementalToggle: false }
+			},
+		}
 	}
 
 	return actions

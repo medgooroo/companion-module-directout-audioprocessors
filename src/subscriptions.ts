@@ -1,7 +1,7 @@
 import { Subscription } from './types.js'
 import { DirectoutInstance } from './main.js'
 import { CompanionRecordedAction } from '@companion-module/base'
-import { stringToNum } from './utils.js'
+import { getMtx64, mtx64XptFromIndex, stringToNum } from './utils.js'
 
 export function returnStaticSubscriptions(self: DirectoutInstance): Map<string, Subscription> {
 	/**
@@ -77,6 +77,79 @@ export function returnStaticSubscriptions(self: DirectoutInstance): Map<string, 
 			{
 				check: /^\/settings\/sum_bus_assign_(io|dsp)\/\d+\/segment\/\d+/,
 				feedback: ['routing_sumbus'],
+			},
+		],
+		[
+			'mtx64_xpt',
+			{
+				check: /^\/settings\/mixer64x64\/(mute|param)\/\d+$/,
+				feedback: ['mtx64_xpt_mute', 'mtx64_xpt_level'],
+				fun: (path) => {
+					const mtx64 = getMtx64(self.devicetype)
+					if (!self.isRecording || !mtx64) return false
+					const pathParts = path.substring(1).split('/')
+					const { master, source } = mtx64XptFromIndex(mtx64, Number(pathParts[3]))
+					const value = Number(self.getState(path))
+					const action: CompanionRecordedAction =
+						pathParts[2] === 'mute'
+							? { actionId: 'mtx64_xpt_mute', options: { master, source, mute: value ? 1 : 0 } }
+							: {
+									actionId: 'mtx64_xpt_level',
+									options: { master, source, level: value, level_incrementalToggle: false },
+								}
+					self.recordAction(action)
+					self.inhibitNextGenericRecord = true
+					return false
+				},
+			},
+		],
+		[
+			'mtx64_xpt_variables',
+			{
+				check: /^\/settings\/mixer64x64\/(mute|param)\/\d+$/,
+				init: ['/settings/mixer64x64/mute', '/settings/mixer64x64/param'],
+				fun: (path) => {
+					const mtx64 = getMtx64(self.devicetype)
+					if (!mtx64) return false
+					const pathParts = path.substring(1).split('/')
+					const kind = pathParts[2]
+					const variable = kind === 'mute' ? 'matrix_source_mute' : 'matrix_source_send_level'
+
+					if (!self.variablesTable.has(variable)) {
+						self.variablesTable.set(variable, {
+							variableId: variable,
+							name:
+								kind === 'mute'
+									? 'Matrix source mutes, object of matrix index with object of source index'
+									: 'Matrix source send levels in dB, object of matrix index with object of source index',
+							publishers: new Set(['mtx64']),
+						})
+						self.updateVariableDefinitions()
+					}
+
+					// one crosspoint changed, replace only that entry
+					const current: any = self.getVariableValue(variable)
+					if (pathParts.length === 4 && typeof current === 'object' && current !== null) {
+						const { master, source } = mtx64XptFromIndex(mtx64, Number(pathParts[3]))
+						self.setVariableValues({
+							[variable]: { ...current, [master]: { ...current[master], [source]: self.getState(path) } },
+						})
+						return false
+					}
+
+					// init, build the whole object
+					const values = self.getState(`/settings/mixer64x64/${kind}`)
+					if (!Array.isArray(values)) return false
+					const returnObj: any = {}
+					values.forEach((value, index) => {
+						const { master, source } = mtx64XptFromIndex(mtx64, index)
+						if (master >= mtx64.out) return
+						if (typeof returnObj[master] !== 'object') returnObj[master] = {}
+						returnObj[master][source] = value
+					})
+					self.setVariableValues({ [variable]: returnObj })
+					return false
+				},
 			},
 		],
 		[

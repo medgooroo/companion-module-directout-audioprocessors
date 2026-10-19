@@ -2,6 +2,7 @@ import { CompanionActionEvent, CompanionFeedbackInfo } from '@companion-module/b
 import { deviceTables } from './capabilities.js'
 import { DirectoutInstance } from './main.js'
 import { DeviceType, Subscription } from './types.js'
+import { getMtx64 } from './utils.js'
 
 export type Option = {
 	/** optional ID to override the option id, should not be omitted */
@@ -1609,6 +1610,56 @@ export function returnParameters(self: DirectoutInstance): Parameters {
 				{
 					id: 'label',
 					path: '/settings/mixer/*/label',
+					label: 'Label',
+					type: 'string',
+				},
+			],
+		},
+
+		mtx64_master_label: {
+			name: 'Matrix Mixer Master Label',
+			provide: ['action', 'feedback', 'preset', 'variable'],
+			device: ['PRODIGY.MX', 'MAVEN.A'],
+			options: [
+				{
+					id: 'master', // opt1
+					label: 'Matrix',
+					type: 'dropdown',
+					choices: Array.from({ length: getMtx64(self.devicetype)?.out ?? 0 }, (_, i) => ({
+						label: `Matrix ${i + 1}`,
+						id: i,
+					})),
+				},
+			],
+			parameters: [
+				{
+					id: 'label',
+					path: '/settings/mixer64x64/master/*/label',
+					label: 'Label',
+					type: 'string',
+				},
+			],
+		},
+
+		mtx64_source_label: {
+			name: 'Matrix Mixer Source Label',
+			provide: ['action', 'feedback', 'preset', 'variable'],
+			device: ['PRODIGY.MX', 'MAVEN.A'],
+			options: [
+				{
+					id: 'source', // opt1
+					label: 'Source Channel',
+					type: 'dropdown',
+					choices: Array.from({ length: getMtx64(self.devicetype)?.in ?? 0 }, (_, i) => ({
+						label: `Source ${i + 1}`,
+						id: i,
+					})),
+				},
+			],
+			parameters: [
+				{
+					id: 'label',
+					path: '/settings/mixer64x64/source_label/*',
 					label: 'Label',
 					type: 'string',
 				},

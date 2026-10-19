@@ -3,6 +3,7 @@ import { isSet } from 'util/types'
 import { DirectoutInstance } from './main.js'
 import { Subscription } from './types.js'
 import { deviceTables } from './capabilities.js'
+import { getMtx64, mtx64XptOptions, mtx64XptPath } from './utils.js'
 
 export function returnFeedbackDefinitions(self: DirectoutInstance): CompanionFeedbackDefinitions {
 	const feedbacks: CompanionFeedbackDefinitions = {
@@ -440,6 +441,79 @@ export function returnFeedbackDefinitions(self: DirectoutInstance): CompanionFee
 			if (value === 1) return true
 			else return false
 		},
+	}
+
+	const mtx64 = getMtx64(self.devicetype)
+	if (mtx64) {
+		const xptOptions = mtx64XptOptions(mtx64, (path) => self.getState(path))
+
+		feedbacks['mtx64_xpt_mute'] = {
+			name: 'Matrix: Check Source Mute',
+			type: 'boolean',
+			defaultStyle: self.defaultDefaultStyle,
+			options: [
+				...xptOptions,
+				{
+					id: 'mute',
+					type: 'dropdown',
+					label: 'State',
+					choices: [
+						{ label: 'Muted', id: 1 },
+						{ label: 'Unmuted', id: 0 },
+					],
+					default: 1,
+				},
+			],
+			callback: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'mute', event.options.master, event.options.source)
+				if (!path) return false
+				const muted = Number(self.getState(path)) ? 1 : 0
+				return muted === Number(event.options.mute)
+			},
+			learn: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'mute', event.options.master, event.options.source)
+				if (!path) return {}
+				return { ...event.options, mute: Number(self.getState(path)) ? 1 : 0 }
+			},
+		}
+
+		feedbacks['mtx64_xpt_level'] = {
+			name: 'Matrix: Check Source Send Level',
+			type: 'boolean',
+			defaultStyle: self.defaultDefaultStyle,
+			options: [
+				...xptOptions,
+				{
+					id: 'operation',
+					type: 'dropdown',
+					label: 'Operation',
+					choices: [
+						{ id: 'eq', label: 'Equals' },
+						{ id: 'lt', label: 'Less than' },
+						{ id: 'gt', label: 'Greater than' },
+					],
+					default: 'eq',
+				},
+				{ id: 'level', type: 'number', label: 'Level', min: -144, max: 18, step: 0.1, default: 0 },
+			],
+			callback: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'param', event.options.master, event.options.source)
+				if (!path) return false
+				const stored = Number(self.getState(path))
+				const level = Number(event.options.level)
+				if (isNaN(stored) || isNaN(level)) return false
+				if (event.options.operation === 'lt') return stored < level
+				if (event.options.operation === 'gt') return stored > level
+				return stored == level
+			},
+			learn: (event, _context) => {
+				const path = mtx64XptPath(mtx64, 'param', event.options.master, event.options.source)
+				if (!path) return {}
+				const level = Number(self.getState(path))
+				if (isNaN(level)) return {}
+				return { ...event.options, operation: 'eq', level }
+			},
+		}
 	}
 
 	return feedbacks
