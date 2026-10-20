@@ -640,7 +640,7 @@ export function returnActionDefinitions(self: DirectoutInstance): CompanionActio
 		const xptOptions = mtx64XptOptions(mtx64, (path) => self.getState(path))
 
 		actions['mtx64_xpt_mute'] = {
-			name: 'Matrix: Source Mute',
+			name: 'Set Matrix Source Mute',
 			options: [
 				...xptOptions,
 				{
@@ -670,7 +670,7 @@ export function returnActionDefinitions(self: DirectoutInstance): CompanionActio
 		}
 
 		actions['mtx64_xpt_level'] = {
-			name: 'Matrix: Source Send Level',
+			name: 'Set Matrix Source Send Level',
 			options: [
 				...xptOptions,
 				{

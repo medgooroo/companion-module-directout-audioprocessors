@@ -37,7 +37,7 @@ The Take Selected Route action also has a channel count option that lets you rou
 
 ### Matrix Mixer (PRODIGY.MX, MAVEN.A)
 
-`Matrix: Source Mute` and `Matrix: Source Send Level` control the send of one source channel into one matrix of the 64x64 mixer. Level is in dB from -144 to 18 and can be set absolute or incremental. Matching feedbacks check the mute state and compare the level.  
+`Set Matrix Source Mute` and `Set Matrix Source Send Level` control the send of one source channel into one matrix of the 64x64 mixer. Level is in dB from -144 to 18 and can be set absolute or incremental. Matching feedbacks check the mute state and compare the level.  
 The variables `matrix_source_mute` and `matrix_source_send_level` hold every crosspoint as an object of matrix index with an object of source index, both starting at 0. In an expression `$(directout:matrix_source_send_level)[5][2]` is the level of matrix 6, source 3. Labels are in `matrix_mixer_master_label` and `matrix_mixer_source_label`, indexed the same way.
 
 ### Custom Action
