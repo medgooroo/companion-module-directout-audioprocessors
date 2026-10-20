@@ -448,7 +448,7 @@ export function returnFeedbackDefinitions(self: DirectoutInstance): CompanionFee
 		const xptOptions = mtx64XptOptions(mtx64, (path) => self.getState(path))
 
 		feedbacks['mtx64_xpt_mute'] = {
-			name: 'Matrix: Check Source Mute',
+			name: 'Check Matrix Source Mute',
 			type: 'boolean',
 			defaultStyle: self.defaultDefaultStyle,
 			options: [
@@ -478,7 +478,7 @@ export function returnFeedbackDefinitions(self: DirectoutInstance): CompanionFee
 		}
 
 		feedbacks['mtx64_xpt_level'] = {
-			name: 'Matrix: Check Source Send Level',
+			name: 'Check Matrix Source Send Level',
 			type: 'boolean',
 			defaultStyle: self.defaultDefaultStyle,
 			options: [
